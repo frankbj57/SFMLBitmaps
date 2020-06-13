@@ -46,6 +46,9 @@ CellularAutomaton::CellularAutomaton(int xDim, int yDim, const NeighborHood& nbh
 		rows_[r] = new bool [xDim_] {};
 		newrows_[r] = new bool [xDim_] {};
 	}
+
+	minActiveX_ = minActiveY_ = INT_MAX;
+	maxActiveX_ = maxActiveY_ = -1;
 }
 
 
@@ -53,30 +56,62 @@ void CellularAutomaton::update()
 {
 	int hotspotX = nbh_.xDim() / 2;
 	int hotspotY = nbh_.yDim() / 2;
+	int minActiveX = INT_MAX;
+	int minActiveY = INT_MAX;
+	int maxActiveX = -1;
+	int maxActiveY = -1;
 
-	for (int r = hotspotY; r < yDim_ - hotspotY; r++)
+
+	for (int r = 0; r < yDim_; r++)
 	{
-		for (int c = hotspotX; c < xDim_ - hotspotX; c++)
+		for (int c = 0; c < xDim_; c++)
 		{
 			int count = 0;
 
+			// Use the neighborhood to conditionally count neighbors
 			for (int nr = 0; nr < nbh_.yDim(); nr++)
 			{
 				for (int nc = 0; nc < nbh_.xDim(); nc++)
 				{
 					if (nbh_[nr][nc])
 					{
-						if (rows_[r - hotspotY + nr][c - hotspotX + nc])
+						// This cell in the neighborhood should be counted
+						// Calculate effective cell to check, with wrap-around
+						int effR = r - hotspotY + nr;
+						int effC = c - hotspotX + nc;
+						if (effR < 0)
+							effR += yDim_;
+						else if (effR >= yDim_)
+							effR -= yDim_;
+
+						if (effC < 0)
+							effC += xDim_;
+						else if (effC >= xDim_)
+							effC -= xDim_;
+
+						if (rows_[effR][effC])
 							count++;
 					}
 				}
 			}
 
-			newrows_[r][c] = nsf_[rows_[r][c]][count];
+			// Assign based on next state function
+			// At the same time, check active area
+			if (newrows_[r][c] = nsf_[rows_[r][c]][count])
+			{
+				minActiveX = std::min(minActiveX, c);
+				maxActiveX = std::max(maxActiveX, c);
+				minActiveY = std::min(minActiveY, r);
+				maxActiveY = std::max(maxActiveY, r);
+			};
 		}
 	}
 
 	std::swap(newrows_, rows_);
+	std::swap(minActiveX, minActiveX_);
+	std::swap(minActiveY, minActiveY_);
+	std::swap(maxActiveX, maxActiveX_);
+	std::swap(maxActiveY, maxActiveY_);
 }
 
 CellularAutomaton::~CellularAutomaton()
@@ -99,7 +134,10 @@ void CellularAutomaton::insert(int xPos, int yPos, const std::initializer_list<s
 		int c = 0;
 		for (bool f : row)
 		{
-			rows_[r+yPos][c+xPos] = f;
+			int newR = r + yPos;
+			int newC = c + xPos;
+			if (newR >= 0 && newR < yDim_ && newC >= 0 && newC < xDim_)
+				rows_[newR][newC] = f;
 			c++;
 		}
 		r++;

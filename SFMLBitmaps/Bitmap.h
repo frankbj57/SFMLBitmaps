@@ -13,6 +13,9 @@ public:
 	void setScale(float xScale, float yScale);
 	void setPosition(float xPos, float yPos);
 
+	int xDim() const { return image_.getSize().x; }
+	int yDim() const { return image_.getSize().y; }
+
 private:
 	bool needsUpdate_ = true;
 	sf::Texture texture_;

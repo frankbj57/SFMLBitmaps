@@ -9,50 +9,9 @@ int main()
 {
     BitmapsApp app;
 
-    //app.init();
-
-    //app.run();
-
-    //app.cleanup();
-
-    // Game-of-life neighborhood
-    NeighborHood nb = {
-        {1,1,1},
-        {1,0,1},
-        {1,1,1}
-    };
-
-    // Game-of-life next state function
-    NextStateFunction gol_nsf = {
-        {0, 0, 0, 1, 0, 0, 0, 0, 0 },
-        {0, 0, 1, 1, 0, 0, 0, 0, 0 }
-    };
-
-    CellularAutomaton gameOfLife(20, 20, nb, gol_nsf);
-
-    gameOfLife.print();
-
-    // Insert blinker
-    gameOfLife.insert(1, 1,
-        {
-            {0, 1, 0},
-            {0, 1, 0},
-            {0, 1, 0}
-        });
-
-    gameOfLife.print();
-
-    gameOfLife.update();
-
-    gameOfLife.print();
-
-
-    std::cout << nb[0][0] << std::endl;
-
-    nb[0][0] = 0;
-
-    std::cout << nb[0][0] << std::endl;
-
+    app.init();
+    app.run();
+    app.cleanup();
 
 }
 

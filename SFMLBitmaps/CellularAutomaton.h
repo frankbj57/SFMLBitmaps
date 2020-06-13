@@ -1,5 +1,6 @@
 #pragma once
 #include <initializer_list>
+#include <vector>
 
 const int maxDim = 7;
 
@@ -24,13 +25,13 @@ private:
 	bool neighbors_[maxDim][maxDim];
 
 	int xDim_, yDim_;
-
 };
 
 class NextStateFunction
 {
 public:
 	NextStateFunction(const std::initializer_list<std::initializer_list<bool>>& nextStates);
+	NextStateFunction(const std::vector<std::vector<bool>>& nextStates);
 
 	const bool* operator[](int row) const { return nextState_[row]; }
 
@@ -75,6 +76,8 @@ private:
 
 	bool** rows_;
 	bool** newrows_;
+
+	int minActiveX_, minActiveY_, maxActiveX_, maxActiveY_;
 };
 
 

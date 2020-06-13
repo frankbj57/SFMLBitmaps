@@ -1,6 +1,7 @@
 #pragma once
 #include "SFApp.h"
 #include "Bitmap.h"
+#include "CellularAutomaton.h"
 
 class BitmapsApp :
 	public SFApp
@@ -29,6 +30,7 @@ private:
 	float offsetX_ = 0.0;
 	float offsetY_ = 0.0;
 
-	sf::CircleShape circle{ 100.0f };
+	CellularAutomaton *pAutomaton;
+	bool active = false;
 };
 

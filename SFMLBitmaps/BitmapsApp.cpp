@@ -1,16 +1,58 @@
 #include "BitmapsApp.h"
 
 #include <iostream>
+#include <algorithm>
 
 using namespace std;
 
+//The dreaded windows include file...
+#define WIN32_LEAN_AND_MEAN //Reduce compile time of windows.h
+#include <Windows.h>
+#undef min
+#undef max
+
 BitmapsApp::BitmapsApp()
-	: SFApp("SFML Bitmaps")
+	: SFApp("SFML Bitmaps"), pAutomaton(nullptr)
 {
 }
 
 void BitmapsApp::init()
 {
+	WCHAR parameter[1000];
+
+	GetPrivateProfileSection(L"CellAuto", parameter, sizeof(parameter), L"CellAutoConfig.ini");
+
+	// Game-of-life neighborhood
+	NeighborHood nb = {
+		{1,1,1},
+		{1,0,1},
+		{1,1,1}
+	};
+
+	// Game-of-life next state function
+	NextStateFunction gol_nsf = {
+		{0, 0, 0, 1, 0, 0, 0, 0, 0 },
+		{0, 0, 1, 1, 0, 0, 0, 0, 0 }
+	};
+
+	pAutomaton = new CellularAutomaton(200, 150, nb, gol_nsf);
+
+	// Insert blinker
+	pAutomaton->insert(1, 1,
+		{
+			{0, 1, 0},
+			{0, 1, 0},
+			{0, 1, 0}
+		});
+
+	// Insert glider
+	pAutomaton->insert(25, 25,
+		{
+			{0, 1, 0},
+			{0, 0, 1},
+			{1, 1, 1}
+		});
+
 	displayCommands();
 	// Continue on any key pressed
 	// system("pause");
@@ -22,7 +64,7 @@ void BitmapsApp::init()
 
 	bitmap_.create(800, 600);
 
-	circle.setFillColor(sf::Color::Green);
+	generate(bitmap_);
 
 	window.requestFocus();
 }
@@ -69,13 +111,13 @@ void BitmapsApp::handleEvent(sf::Event& event)
 			break;
 
 		case sf::Keyboard::Add:
-			zoomFactor_ += 0.5;
+			zoomFactor_ *= 1.5;
 			bitmap_.setScale(zoomFactor_, zoomFactor_);
 			break;
 
 		case sf::Keyboard::Subtract:
 		case sf::Keyboard::Hyphen:
-			zoomFactor_ -= 0.5;
+			zoomFactor_ /= 1.5;
 			bitmap_.setScale(zoomFactor_, zoomFactor_);
 			break;
 
@@ -99,8 +141,13 @@ void BitmapsApp::handleEvent(sf::Event& event)
 			bitmap_.setPosition(offsetX_, offsetY_);
 			break;
 
+		case sf::Keyboard::Space:
 		case sf::Keyboard::G:
 			generate(bitmap_);
+			break;
+
+		case sf::Keyboard::A:
+			active = !active;
 			break;
 		}
 		break;
@@ -113,48 +160,10 @@ void BitmapsApp::handleEvent(sf::Event& event)
 
 void BitmapsApp::handleFrame()
 {
-	static sf::Uint8 pixels[]
-		=
-	{
-		255, 255, 255, 255,
-		0, 0, 0, 255,
-		0, 0, 0, 255,
-		255, 255, 255, 255
-	};
-
 	window.clear();
 
-	sf::Texture tex2x2;
-
-	tex2x2.create(2, 2);
-
-	tex2x2.update(pixels);
-
-	// tex2x2.setRepeated(true);
-
-	sf::Sprite spr;
-
-	spr.setTexture(tex2x2);
-
-
-	// spr.setTextureRect(sf::IntRect(0, 0, 100, 100));
-	// set texture to be repeated to fill the new rectangle size with copies
-
-	spr.setScale(50,50);
-	// this will stretch the texture along with the size of the rectangle of the sprite
-	// For sprites, stretching overrides repeat
-
-	sf::Vector2f pos = circle.getPosition();
-
-	circle.setPosition(pos.x + 1, pos.y + 1);
-
-	circle.setTexture(&tex2x2);
-
-	// For cirles, apparently size will stretch the texture
-
-	window.draw(circle);
-
-	window.draw(spr);
+	if (active)
+		generate(bitmap_);
 
 	bitmap_.draw(window);
 
@@ -164,6 +173,8 @@ void BitmapsApp::handleFrame()
 
 void BitmapsApp::cleanup()
 {
+	delete pAutomaton;
+	pAutomaton = nullptr;
 }
 
 void BitmapsApp::displayCommands()
@@ -193,14 +204,12 @@ void BitmapsApp::generate(Bitmap& bitmap)
 {
 	bitmap.clear(sf::Color::Black);
 
-	for (int y = 0; y < 600; y++)
-		for (int x = 0; x < 800; x++)
+	pAutomaton->update();
+
+	for (int y = 0; y < std::min(pAutomaton->yDim(), bitmap_.yDim()); y++)
+		for (int x = 0; x < std::min(pAutomaton->xDim(), bitmap_.xDim()); x++)
 		{
-			float fx = -15.0f + (87.0f / 800) * x;
-			float fy = -20.0f + (87.0f / 600) * y;
-			float sqr = fx * fx + fy * fy;
-			int isqr = (int)sqr;
-			if (isqr % 2)
-				bitmap.setPixel(x, y, sf::Color::White);
+			if ((*pAutomaton)[y][x])
+				bitmap_.setPixel(x, y, sf::Color::White);
 		}
 }

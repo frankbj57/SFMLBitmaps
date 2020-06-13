@@ -4,11 +4,11 @@ void Bitmap::create(int width, int height, sf::Color background)
 {
 	image_.create(width, height, background);
 
-	for (int r = 0; r < 600; r++)
-		for (int c = 0; c < 800; c++)
-		{
-			image_.setPixel(c, r, sf::Color(((c + r) % 5) * 64 - 1, ((c + r) % 9) * 32 - 1, ((c + r) % 17) * 16 - 1));
-		}
+	//for (int r = 0; r < 600; r++)
+	//	for (int c = 0; c < 800; c++)
+	//	{
+	//		image_.setPixel(c, r, sf::Color(((c + r) % 5) * 64 - 1, ((c + r) % 9) * 32 - 1, ((c + r) % 17) * 16 - 1));
+	//	}
 
 	texture_.loadFromImage(image_);
 
