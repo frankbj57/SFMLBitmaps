@@ -68,6 +68,9 @@ public:
 
 	void print() const;
 
+	void setWrapAround(bool wrap) { wrapAround_ = wrap; }
+	bool wrapAround() const { return wrapAround_;  }
+
 private:
 	NeighborHood nbh_;
 	NextStateFunction nsf_;
@@ -78,6 +81,8 @@ private:
 	bool** newrows_;
 
 	int minActiveX_, minActiveY_, maxActiveX_, maxActiveY_;
+
+	bool wrapAround_;
 };
 
 

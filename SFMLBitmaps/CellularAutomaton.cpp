@@ -36,7 +36,7 @@ bool* NeighborHood::operator[](int row)
 }
 
 CellularAutomaton::CellularAutomaton(int xDim, int yDim, const NeighborHood& nbh, const NextStateFunction& nsf)
-	: nbh_(nbh), nsf_(nsf), xDim_(xDim), yDim_(yDim)
+	: nbh_(nbh), nsf_(nsf), xDim_(xDim), yDim_(yDim), wrapAround_(true)
 {
 	rows_ = new bool*[yDim_];
 	newrows_ = new bool*[yDim_];
@@ -62,9 +62,13 @@ void CellularAutomaton::update()
 	int maxActiveY = -1;
 
 
-	for (int r = 0; r < yDim_; r++)
+	for (int r = std::max(0, minActiveY_-nbh_.yDim()); 
+		 r < std::min(yDim_, maxActiveY_+1+nbh_.yDim()); 
+		 r++)
 	{
-		for (int c = 0; c < xDim_; c++)
+		for (int c = std::max(0, minActiveX_-nbh_.xDim()); 
+		     c < std::min(xDim_, maxActiveX_+1+nbh_.xDim()); 
+			 c++)
 		{
 			int count = 0;
 
@@ -79,18 +83,28 @@ void CellularAutomaton::update()
 						// Calculate effective cell to check, with wrap-around
 						int effR = r - hotspotY + nr;
 						int effC = c - hotspotX + nc;
-						if (effR < 0)
-							effR += yDim_;
-						else if (effR >= yDim_)
-							effR -= yDim_;
+						if (wrapAround_)
+						{
+							if (effR < 0)
+								effR += yDim_;
+							else if (effR >= yDim_)
+								effR -= yDim_;
+							//  effR = (effR + yDim_) % yDim_;
 
-						if (effC < 0)
-							effC += xDim_;
-						else if (effC >= xDim_)
-							effC -= xDim_;
+							if (effC < 0)
+								effC += xDim_;
+							else if (effC >= xDim_)
+								effC -= xDim_;
 
-						if (rows_[effR][effC])
-							count++;
+							if (rows_[effR][effC])
+								count++;
+						}
+						else
+						{
+							if (effR >= 0 && effR < yDim_ && effC >= 0 && effC < xDim_)
+								if (rows_[effR][effC])
+									count++;
+						}
 					}
 				}
 			}
@@ -137,7 +151,14 @@ void CellularAutomaton::insert(int xPos, int yPos, const std::initializer_list<s
 			int newR = r + yPos;
 			int newC = c + xPos;
 			if (newR >= 0 && newR < yDim_ && newC >= 0 && newC < xDim_)
-				rows_[newR][newC] = f;
+				if (rows_[newR][newC] = f)
+				{
+					minActiveX_ = std::min(minActiveX_, newC);
+					maxActiveX_ = std::max(maxActiveX_, newC);
+					minActiveY_ = std::min(minActiveY_, newR);
+					maxActiveY_ = std::max(maxActiveY_, newR);
+				}
+
 			c++;
 		}
 		r++;

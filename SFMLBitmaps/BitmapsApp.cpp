@@ -23,7 +23,7 @@ void BitmapsApp::init()
 	GetPrivateProfileSection(L"CellAuto", parameter, sizeof(parameter), L"CellAutoConfig.ini");
 
 	// Game-of-life neighborhood
-	NeighborHood nb = {
+	NeighborHood gol_nb = {
 		{1,1,1},
 		{1,0,1},
 		{1,1,1}
@@ -35,15 +35,15 @@ void BitmapsApp::init()
 		{0, 0, 1, 1, 0, 0, 0, 0, 0 }
 	};
 
-	pAutomaton = new CellularAutomaton(200, 150, nb, gol_nsf);
+	 pAutomaton = new CellularAutomaton(103, 103, gol_nb, gol_nsf);
 
 	// Insert blinker
-	pAutomaton->insert(1, 1,
-		{
-			{0, 1, 0},
-			{0, 1, 0},
-			{0, 1, 0}
-		});
+	//pAutomaton->insert(1, 1,
+	//	{
+	//		{0, 1, 0},
+	//		{0, 1, 0},
+	//		{0, 1, 0}
+	//	});
 
 	// Insert glider
 	pAutomaton->insert(25, 25,
@@ -52,6 +52,27 @@ void BitmapsApp::init()
 			{0, 0, 1},
 			{1, 1, 1}
 		});
+
+	//NeighborHood fredkin_nb =
+	//{
+	//	{0, 1, 0},
+	//	{1, 0, 1},
+	//	{0, 1, 0},
+	//};
+
+	//NextStateFunction fredkin_nsf = {
+	//	{0, 1, 0, 1, 0, 1, 0, 1, 0, 1}
+	//};
+
+	//pAutomaton = new CellularAutomaton(10000, 10000, fredkin_nb, fredkin_nsf);
+	//pAutomaton->setWrapAround(false);
+
+	//pAutomaton->insert(99, 99,
+	//	{
+	//		{1, 0, 1},
+	//		{0, 0, 0},
+	//		{1, 0, 1}
+	//	});
 
 	displayCommands();
 	// Continue on any key pressed
@@ -64,7 +85,7 @@ void BitmapsApp::init()
 
 	bitmap_.create(800, 600);
 
-	generate(bitmap_);
+	render(*pAutomaton, bitmap_);
 
 	window.requestFocus();
 }
@@ -143,7 +164,8 @@ void BitmapsApp::handleEvent(sf::Event& event)
 
 		case sf::Keyboard::Space:
 		case sf::Keyboard::G:
-			generate(bitmap_);
+			pAutomaton->update();
+			render(*pAutomaton, bitmap_);
 			break;
 
 		case sf::Keyboard::A:
@@ -163,7 +185,10 @@ void BitmapsApp::handleFrame()
 	window.clear();
 
 	if (active)
-		generate(bitmap_);
+	{
+		pAutomaton->update();
+		render(*pAutomaton, bitmap_);
+	}
 
 	bitmap_.draw(window);
 
@@ -200,16 +225,14 @@ void BitmapsApp::displayCommands()
 	std::cout << std::endl;
 }
 
-void BitmapsApp::generate(Bitmap& bitmap)
+void BitmapsApp::render(const CellularAutomaton&ca, Bitmap& bitmap)
 {
-	bitmap.clear(sf::Color::Black);
+	bitmap.clear(sf::Color::White);
 
-	pAutomaton->update();
-
-	for (int y = 0; y < std::min(pAutomaton->yDim(), bitmap_.yDim()); y++)
-		for (int x = 0; x < std::min(pAutomaton->xDim(), bitmap_.xDim()); x++)
+	for (int y = 0; y < std::min(ca.yDim(), bitmap_.yDim()); y++)
+		for (int x = 0; x < std::min(ca.xDim(), bitmap_.xDim()); x++)
 		{
-			if ((*pAutomaton)[y][x])
-				bitmap_.setPixel(x, y, sf::Color::White);
+			if (ca[y][x])
+				bitmap_.setPixel(x, y, sf::Color::Black);
 		}
 }

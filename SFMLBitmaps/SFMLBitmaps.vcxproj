@@ -159,7 +159,10 @@
   <ItemGroup>
     <ClCompile Include="Bitmap.cpp" />
     <ClCompile Include="BitmapsApp.cpp" />
-    <ClCompile Include="CellularAutomaton.cpp" />
+    <ClCompile Include="CellularAutomaton.cpp">
+      <AssemblerOutput Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">All</AssemblerOutput>
+      <AssemblerOutput Condition="'$(Configuration)|$(Platform)'=='Release|x64'">All</AssemblerOutput>
+    </ClCompile>
     <ClCompile Include="SFApp.cpp" />
     <ClCompile Include="SFMLBitmaps.cpp" />
   </ItemGroup>

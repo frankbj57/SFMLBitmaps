@@ -22,7 +22,7 @@ protected:
 
 private:
 	void displayCommands();
-	void generate(Bitmap& bitmap);
+	void render(const CellularAutomaton &ca, Bitmap& bitmap);
 
 	Bitmap bitmap_;
 
