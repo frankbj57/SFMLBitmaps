@@ -30,6 +30,12 @@
     <ClCompile Include="CellularAutomaton.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="NeighborHood.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="NextStateFunction.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="SFApp.h">
@@ -42,6 +48,15 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="CellularAutomaton.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Neighborhood.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="NextStateFunction.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="CellularAutomatonDefinitions.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

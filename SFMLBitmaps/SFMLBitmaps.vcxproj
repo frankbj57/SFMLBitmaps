@@ -163,6 +163,8 @@
       <AssemblerOutput Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">All</AssemblerOutput>
       <AssemblerOutput Condition="'$(Configuration)|$(Platform)'=='Release|x64'">All</AssemblerOutput>
     </ClCompile>
+    <ClCompile Include="NeighborHood.cpp" />
+    <ClCompile Include="NextStateFunction.cpp" />
     <ClCompile Include="SFApp.cpp" />
     <ClCompile Include="SFMLBitmaps.cpp" />
   </ItemGroup>
@@ -170,6 +172,9 @@
     <ClInclude Include="Bitmap.h" />
     <ClInclude Include="BitmapsApp.h" />
     <ClInclude Include="CellularAutomaton.h" />
+    <ClInclude Include="CellularAutomatonDefinitions.h" />
+    <ClInclude Include="Neighborhood.h" />
+    <ClInclude Include="NextStateFunction.h" />
     <ClInclude Include="SFApp.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

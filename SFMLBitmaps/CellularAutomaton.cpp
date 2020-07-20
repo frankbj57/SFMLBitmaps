@@ -3,38 +3,6 @@
 #include <iostream>
 
 
-NeighborHood::NeighborHood(const std::initializer_list<std::initializer_list<bool>> &neighborHoodFlags)
-	: neighbors_{}
-{
-	yDim_ = (int) neighborHoodFlags.size();
-
-	xDim_ = 0;
-	size_t x = 0;
-
-	for (auto row : neighborHoodFlags)
-	{
-		xDim_ = std::max((int) row.size(), xDim_);
-
-		size_t y = 0;
-		for (bool f : row)
-		{
-			neighbors_[x][y] = f;
-			y++;
-		}
-		x++;
-	}
-}
-
-const bool* NeighborHood::operator[](int row) const
-{
-	return neighbors_[row];
-}
-
-bool* NeighborHood::operator[](int row)
-{
-	return neighbors_[row];
-}
-
 CellularAutomaton::CellularAutomaton(int xDim, int yDim, const NeighborHood& nbh, const NextStateFunction& nsf)
 	: nbh_(nbh), nsf_(nsf), xDim_(xDim), yDim_(yDim), wrapAround_(true)
 {
@@ -61,13 +29,43 @@ void CellularAutomaton::update()
 	int maxActiveX = -1;
 	int maxActiveY = -1;
 
+	int startr, endr;
+	int startc, endc;
+	if (wrapAround_)
+	{
+		startr = std::max(0, (minActiveY_ - nbh_.yDim() + yDim_) % yDim_);
+		endr = std::min(yDim_, (maxActiveY_ + nbh_.yDim() + yDim_) % yDim_);
 
-	for (int r = std::max(0, minActiveY_-nbh_.yDim()); 
-		 r < std::min(yDim_, maxActiveY_+1+nbh_.yDim()); 
+		startc = std::max(0, (minActiveX_ - nbh_.xDim() + xDim_) % xDim_);
+		endc = std::min(xDim_, (maxActiveX_ + nbh_.xDim() + xDim_) % xDim_);
+	}
+	else
+	{
+		startr = std::max(0, (minActiveY_ - nbh_.yDim()));
+		endr = std::min(yDim_, (maxActiveY_ + nbh_.yDim()));
+
+		startc = std::max(0, (minActiveX_ - nbh_.xDim()));
+		endc = std::min(xDim_, (maxActiveX_ + nbh_.xDim()));
+	}
+
+	if (endr < startr)
+	{
+		startr = 0;
+		endr = yDim_;
+	}
+
+	if (endc < startc)
+	{
+		startc = 0;
+		endc = xDim_;
+	}
+
+	for (int r = startr;
+		 r < endr; 
 		 r++)
 	{
-		for (int c = std::max(0, minActiveX_-nbh_.xDim()); 
-		     c < std::min(xDim_, maxActiveX_+1+nbh_.xDim()); 
+		for (int c = startc; 
+		     c < endc; 
 			 c++)
 		{
 			int count = 0;
@@ -85,16 +83,9 @@ void CellularAutomaton::update()
 						int effC = c - hotspotX + nc;
 						if (wrapAround_)
 						{
-							if (effR < 0)
-								effR += yDim_;
-							else if (effR >= yDim_)
-								effR -= yDim_;
-							//  effR = (effR + yDim_) % yDim_;
+							effR = (effR + yDim_) % yDim_;
 
-							if (effC < 0)
-								effC += xDim_;
-							else if (effC >= xDim_)
-								effC -= xDim_;
+							effC = (effC + xDim_) % xDim_;
 
 							if (rows_[effR][effC])
 								count++;
@@ -111,6 +102,7 @@ void CellularAutomaton::update()
 
 			// Assign based on next state function
 			// At the same time, check active area
+			// Assignment is intentional
 			if (newrows_[r][c] = nsf_[rows_[r][c]][count])
 			{
 				minActiveX = std::min(minActiveX, c);
@@ -122,10 +114,10 @@ void CellularAutomaton::update()
 	}
 
 	std::swap(newrows_, rows_);
-	std::swap(minActiveX, minActiveX_);
-	std::swap(minActiveY, minActiveY_);
-	std::swap(maxActiveX, maxActiveX_);
-	std::swap(maxActiveY, maxActiveY_);
+	minActiveX_ = minActiveX;
+	minActiveY_ = minActiveY;
+	maxActiveX_ = maxActiveX;
+	maxActiveY_ = maxActiveY;
 }
 
 CellularAutomaton::~CellularAutomaton()
@@ -151,7 +143,7 @@ void CellularAutomaton::insert(int xPos, int yPos, const std::initializer_list<s
 			int newR = r + yPos;
 			int newC = c + xPos;
 			if (newR >= 0 && newR < yDim_ && newC >= 0 && newC < xDim_)
-				if (rows_[newR][newC] = f)
+				if (rows_[newR][newC] = f)  // Assignment is intentional
 				{
 					minActiveX_ = std::min(minActiveX_, newC);
 					maxActiveX_ = std::max(maxActiveX_, newC);
@@ -162,44 +154,6 @@ void CellularAutomaton::insert(int xPos, int yPos, const std::initializer_list<s
 			c++;
 		}
 		r++;
-	}
-}
-
-NextStateFunction::NextStateFunction(const std::initializer_list<std::initializer_list<bool>>& nextStates)
-	: nextState_ {}
-{
-	maxCount_ = 0;
-	if (nextStates.size() == 1)
-	{
-		// Assume same count function for both non-active and active cell
-		auto first = nextStates.begin();
-		maxCount_ = 0;
-
-		for (bool nextState : *first)
-		{
-			nextState_[0][maxCount_] = nextState_[1][maxCount_] = nextState;
-			maxCount_++;
-		}
-	}
-	else
-	{
-		auto first = nextStates.begin();
-		auto second = first + 1;
-		maxCount_ = (int) std::max(first->size(), second->size());
-
-		int c = 0;
-		for (bool nextState : *first)
-		{
-			nextState_[0][c] = nextState;
-			c++;
-		}
-
-		c = 0;
-		for (bool nextState : *second)
-		{
-			nextState_[1][c] = nextState;
-			c++;
-		}
 	}
 }
 

@@ -1,50 +1,6 @@
 #pragma once
-#include <initializer_list>
-#include <vector>
-
-const int maxDim = 7;
-
-
-class NeighborHood
-{
-public:
-	NeighborHood(int xDim, int yDim);
-
-	NeighborHood(const std::initializer_list<std::initializer_list<bool>> &neighborHoodFlags);
-
-	const bool* operator[](int row) const;
-
-	bool* operator[](int row);
-
-	int xDim() const { return xDim_; }
-	int yDim() const { return yDim_; }
-
-
-
-private:
-	bool neighbors_[maxDim][maxDim];
-
-	int xDim_, yDim_;
-};
-
-class NextStateFunction
-{
-public:
-	NextStateFunction(const std::initializer_list<std::initializer_list<bool>>& nextStates);
-	NextStateFunction(const std::vector<std::vector<bool>>& nextStates);
-
-	const bool* operator[](int row) const { return nextState_[row]; }
-
-	bool* operator[](int row) { return nextState_[row]; }
-
-	int maxCount() const { return maxCount_; }
-
-
-private:
-	bool nextState_[2][maxDim * maxDim];
-	int maxCount_;
-};
-
+#include "Neighborhood.h"
+#include "NextStateFunction.h"
 
 class CellularAutomaton
 {
@@ -84,5 +40,3 @@ private:
 
 	bool wrapAround_;
 };
-
-
