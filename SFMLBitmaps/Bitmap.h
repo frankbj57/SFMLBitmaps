@@ -6,7 +6,11 @@ class Bitmap
 public:
 	void create(int width, int height, sf::Color background = sf::Color::Black);
 	void clear(sf::Color background = sf::Color::Black);
-	void setPixel(unsigned int x, unsigned int y, sf::Color color);
+	void setPixel(unsigned int x, unsigned int y, sf::Color color) {
+		image_.setPixel(x, y, color);
+		needsUpdate_ = true;
+	}
+
 
 	void draw(sf::RenderWindow& window);
 
@@ -15,6 +19,8 @@ public:
 
 	int xDim() const { return image_.getSize().x; }
 	int yDim() const { return image_.getSize().y; }
+
+	bool saveToFile(const std::string& fileName);
 
 private:
 	bool needsUpdate_ = true;

@@ -24,12 +24,6 @@ void Bitmap::clear(sf::Color background)
 	needsUpdate_ = true;
 }
 
-void Bitmap::setPixel(unsigned int x, unsigned int y, sf::Color color)
-{
-	image_.setPixel(x, y, color);
-	needsUpdate_ = true;
-}
-
 void Bitmap::draw(sf::RenderWindow& window)
 {
 	if (needsUpdate_)
@@ -49,4 +43,9 @@ void Bitmap::setScale(float xScale, float yScale)
 void Bitmap::setPosition(float xPos, float yPos)
 {
 	sprite_.setPosition(xPos, yPos);
+}
+
+bool Bitmap::saveToFile(const std::string& fileName)
+{
+	return image_.saveToFile(fileName);
 }

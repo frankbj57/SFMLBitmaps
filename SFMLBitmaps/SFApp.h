@@ -19,8 +19,8 @@ public:
 
 
 protected:
-	std::string appName;
-	sf::RenderWindow window;
+	std::string appName_;
+	sf::RenderWindow window_;
 
 private:
 

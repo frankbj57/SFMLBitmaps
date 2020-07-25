@@ -2,14 +2,18 @@
 
 #include <iostream>
 #include <algorithm>
+#include <vector>
 
 using namespace std;
 
 //The dreaded windows include file...
-#define WIN32_LEAN_AND_MEAN //Reduce compile time of windows.h
 #include <Windows.h>
 #undef min
 #undef max
+
+#include <commdlg.h>
+
+bool GetSaveFileName(string& fileName, const vector<string> &extensions);
 
 BitmapsApp::BitmapsApp()
 	: SFApp("SFML Bitmaps"), pAutomaton(nullptr)
@@ -20,7 +24,7 @@ void BitmapsApp::init()
 {
 	WCHAR parameter[1000];
 
-	GetPrivateProfileSection(L"CellAuto", parameter, sizeof(parameter), L"CellAutoConfig.ini");
+	// GetPrivateProfileSection(L"CellAuto", parameter, sizeof(parameter), L"CellAutoConfig.ini");
 
 	// Game-of-life neighborhood
 	NeighborHood gol_nb = {
@@ -74,28 +78,44 @@ void BitmapsApp::init()
 	//		{1, 0, 1}
 	//	});
 
+
+	// Hotspot alternating between (3,2) og (3,3)
+	NeighborHood mayan = {
+		{ 0, 1, 1, 1, 1, 0},
+		{ 1, 1, 0, 0, 1, 1},
+		{ 1, 0, 1, 1, 0, 1},
+		{ 0, 1, 0, 0, 1, 0},
+		{ 1, 0, 1, 1, 0, 1},
+		{ 1, 1, 0, 0, 1, 1},
+		{ 0, 1, 1, 1, 1, 0},
+	};
+
+	// Insert mayan start pattern
+	pAutomaton->insert(0, 0,
+		{""});
+
 	displayCommands();
 	// Continue on any key pressed
 	// system("pause");
 
-	window.create(sf::VideoMode(400, 400),
-		appName);
+	window_.create(sf::VideoMode(400, 400),
+		appName_);
 
-	window.setFramerateLimit(30);
+	window_.setFramerateLimit(30);
 
 	bitmap_.create(800, 600);
 
 	render(*pAutomaton, bitmap_);
 
-	window.requestFocus();
+	window_.requestFocus();
 }
 
 void BitmapsApp::run()
 {
-	while (window.isOpen())
+	while (window_.isOpen())
 	{
 		sf::Event event;
-		while (window.pollEvent(event))
+		while (window_.pollEvent(event))
 		{
 			handleEvent(event);
 		}
@@ -109,14 +129,14 @@ void BitmapsApp::handleEvent(sf::Event& event)
 	switch (event.type)
 	{
 	case sf::Event::Closed:
-		window.close();
+		window_.close();
 		break;
 
 	case sf::Event::KeyPressed:
 		switch (event.key.code)
 		{
 		case sf::Keyboard::Escape:
-			window.close();
+			window_.close();
 			break;
 
 		case sf::Keyboard::H:
@@ -143,22 +163,22 @@ void BitmapsApp::handleEvent(sf::Event& event)
 			break;
 
 		case sf::Keyboard::Right:
-			offsetX_ -= 0.1f * window.getSize().x;
+			offsetX_ -= 0.1f * window_.getSize().x;
 			bitmap_.setPosition(offsetX_, offsetY_);
 			break;
 
 		case sf::Keyboard::Left:
-			offsetX_ += 0.1f * window.getSize().x;
+			offsetX_ += 0.1f * window_.getSize().x;
 			bitmap_.setPosition(offsetX_, offsetY_);
 			break;
 
 		case sf::Keyboard::Up:
-			offsetY_ += 0.1f * window.getSize().y;
+			offsetY_ += 0.1f * window_.getSize().y;
 			bitmap_.setPosition(offsetX_, offsetY_);
 			break;
 
 		case sf::Keyboard::Down:
-			offsetY_ -= 0.1f * window.getSize().y;
+			offsetY_ -= 0.1f * window_.getSize().y;
 			bitmap_.setPosition(offsetX_, offsetY_);
 			break;
 
@@ -171,6 +191,18 @@ void BitmapsApp::handleEvent(sf::Event& event)
 		case sf::Keyboard::A:
 			active = !active;
 			break;
+
+		case sf::Keyboard::S:
+			{
+				string fileName;
+				if (GetSaveFileName(fileName, { "PNG", "*.png", "Bitmap", "*.bmp", "Targa", "*.tga"} ))
+				{
+					cout << "Saving to file: " << fileName << endl;
+					cout << "Saving " << (bitmap_.saveToFile(fileName) ? "succeeded" : "did not succeed") << endl;
+				}
+			}
+			break;
+
 		}
 		break;
 
@@ -182,7 +214,7 @@ void BitmapsApp::handleEvent(sf::Event& event)
 
 void BitmapsApp::handleFrame()
 {
-	window.clear();
+	window_.clear();
 
 	if (active)
 	{
@@ -190,9 +222,9 @@ void BitmapsApp::handleFrame()
 		render(*pAutomaton, bitmap_);
 	}
 
-	bitmap_.draw(window);
+	bitmap_.draw(window_);
 
-	window.display();
+	window_.display();
 }
 
 
@@ -235,4 +267,64 @@ void BitmapsApp::render(const CellularAutomaton&ca, Bitmap& bitmap)
 			if (ca[y][x])
 				bitmap_.setPixel(x, y, sf::Color::Black);
 		}
+}
+
+bool GetSaveFileName(string& fileName, const vector<string>& extensions)
+{
+	OPENFILENAMEA opf;
+	char strResult[500];
+
+	vector<char> extensionlist;
+
+	for (auto extension : extensions)
+	{
+		for (auto c : extension)
+			extensionlist.push_back(c);
+
+		extensionlist.push_back('\0');
+	}
+	extensionlist.push_back('\0');
+
+	strcpy_s(strResult, sizeof(strResult), fileName.c_str());
+
+	ZeroMemory(&opf, sizeof opf);
+	opf.lStructSize = sizeof opf;
+	opf.lpstrFile = strResult;
+	opf.nMaxFile = sizeof strResult;
+
+
+	opf.lpstrFilter = &extensionlist[0];
+	opf.nFilterIndex = 1;
+
+	opf.Flags = OFN_OVERWRITEPROMPT;
+
+	if (GetSaveFileNameA(&opf))
+	{
+		fileName = strResult;
+		if (opf.nFileExtension == 0)
+		{
+			// No extension in file name
+			if (opf.nFilterIndex != 0 && (opf.nFilterIndex) * 2 <= extensions.size())
+			{
+				// User used on of the filters as file type
+				// Use the corresponding extension
+				string ext = extensions[(opf.nFilterIndex - 1) * 2 + 1];
+				int i = 0;
+				while (i < ext.size() && ext[i] != '.')
+					i++;
+
+				if (i < ext.size())
+				{
+					while (i < ext.size())
+					{
+						fileName.push_back(ext[i]);
+						i++;
+					}
+				}
+			}
+		}
+		return true;
+	}
+
+	return false;
 }

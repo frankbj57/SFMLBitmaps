@@ -1,6 +1,7 @@
 #pragma once
 #include "Neighborhood.h"
 #include "NextStateFunction.h"
+#include <string>
 
 class CellularAutomaton
 {
@@ -19,6 +20,7 @@ public:
 
 
 	void insert(int xPos, int YPos, const std::initializer_list<std::initializer_list<bool>>& newStates);
+	void insert(int xPos, int YPos, const std::initializer_list<std::string>& newStates);
 
 	void clear();
 

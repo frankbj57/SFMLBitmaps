@@ -1,7 +1,7 @@
 #include "SFApp.h"
 
 SFApp::SFApp(const std::string& name)
-	: appName(name)
+	: appName_(name)
 {
 
 }
