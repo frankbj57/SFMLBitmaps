@@ -22,15 +22,21 @@ NeighborHood::NeighborHood(const std::initializer_list<std::initializer_list<boo
 		}
 		x++;
 	}
+
+	// Set hotpoints default
+	xHot_ = xDim_ / 2;
+	yHot_ = yDim_ / 2;
 }
 
-const bool* NeighborHood::operator[](int row) const
+void NeighborHood::setHotPoint(int xHot, int yHot)
 {
-	return neighbors_[row];
+	xHot_ = (xHot >= 0 && xHot < xDim_) ? xHot : 0;
+	yHot_ = (yHot >= 0 && yHot < yDim_) ? yHot : 0;
 }
 
-bool* NeighborHood::operator[](int row)
+
+void VerticallyAlternatingNeighborHood::stepHotPoint()
 {
-	return neighbors_[row];
+	xHot_ = xDim() / 2 + currentStep_;
+	currentStep_ = (1 - currentStep_);
 }
-

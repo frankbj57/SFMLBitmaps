@@ -27,19 +27,19 @@ void BitmapsApp::init()
 	// GetPrivateProfileSection(L"CellAuto", parameter, sizeof(parameter), L"CellAutoConfig.ini");
 
 	// Game-of-life neighborhood
-	NeighborHood gol_nb = {
-		{1,1,1},
-		{1,0,1},
-		{1,1,1}
-	};
+	//NeighborHood gol_nb = {
+	//	{1,1,1},
+	//	{1,0,1},
+	//	{1,1,1}
+	//};
 
-	// Game-of-life next state function
-	NextStateFunction gol_nsf = {
-		{0, 0, 0, 1, 0, 0, 0, 0, 0 },
-		{0, 0, 1, 1, 0, 0, 0, 0, 0 }
-	};
+	//// Game-of-life next state function
+	//NextStateFunction gol_nsf = {
+	//	{0, 0, 0, 1, 0, 0, 0, 0, 0 },
+	//	{0, 0, 1, 1, 0, 0, 0, 0, 0 }
+	//};
 
-	 pAutomaton = new CellularAutomaton(103, 103, gol_nb, gol_nsf);
+	// pAutomaton = new CellularAutomaton(800, 600, gol_nb, gol_nsf);
 
 	// Insert blinker
 	//pAutomaton->insert(1, 1,
@@ -50,12 +50,12 @@ void BitmapsApp::init()
 	//	});
 
 	// Insert glider
-	pAutomaton->insert(25, 25,
-		{
-			{0, 1, 0},
-			{0, 0, 1},
-			{1, 1, 1}
-		});
+	//pAutomaton->insert(25, 25,
+	//	{
+	//		{0, 1, 0},
+	//		{0, 0, 1},
+	//		{1, 1, 1}
+	//	});
 
 	//NeighborHood fredkin_nb =
 	//{
@@ -64,9 +64,9 @@ void BitmapsApp::init()
 	//	{0, 1, 0},
 	//};
 
-	//NextStateFunction fredkin_nsf = {
-	//	{0, 1, 0, 1, 0, 1, 0, 1, 0, 1}
-	//};
+	NextStateFunction fredkin_nsf = {
+		{0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1}
+	};
 
 	//pAutomaton = new CellularAutomaton(10000, 10000, fredkin_nb, fredkin_nsf);
 	//pAutomaton->setWrapAround(false);
@@ -80,7 +80,7 @@ void BitmapsApp::init()
 
 
 	// Hotspot alternating between (3,2) og (3,3)
-	NeighborHood mayan = {
+	VerticallyAlternatingNeighborHood mayan = {
 		{ 0, 1, 1, 1, 1, 0},
 		{ 1, 1, 0, 0, 1, 1},
 		{ 1, 0, 1, 1, 0, 1},
@@ -90,15 +90,23 @@ void BitmapsApp::init()
 		{ 0, 1, 1, 1, 1, 0},
 	};
 
-	// Insert mayan start pattern
-	pAutomaton->insert(0, 0,
-		{""});
+	pAutomaton = new CellularAutomaton(800, 600, mayan, fredkin_nsf);
+
+	//// Insert mayan start pattern
+	pAutomaton->insert(400, 300,
+		{ 
+			string( "101010101"),
+			string{ "010101010" },
+			string{ "101010101" },
+			string{ "010101010" }
+		}
+		);
 
 	displayCommands();
 	// Continue on any key pressed
 	// system("pause");
 
-	window_.create(sf::VideoMode(400, 400),
+	window_.create(sf::VideoMode(1000, 800),
 		appName_);
 
 	window_.setFramerateLimit(30);
@@ -149,10 +157,13 @@ void BitmapsApp::handleEvent(sf::Event& event)
 			offsetY_ = 0;
 			bitmap_.setScale(zoomFactor_, zoomFactor_);
 			bitmap_.setPosition(offsetX_, offsetY_);
+			cout << "Zoom set to " << zoomFactor_ << endl;
+			cout << "Offsets set to (" << offsetX_ << ", " << offsetY_ << ")" << endl;
 			break;
 
 		case sf::Keyboard::Add:
 			zoomFactor_ *= 1.5;
+			cout << "Zoom set to " << zoomFactor_ << endl;
 			bitmap_.setScale(zoomFactor_, zoomFactor_);
 			break;
 
@@ -160,26 +171,31 @@ void BitmapsApp::handleEvent(sf::Event& event)
 		case sf::Keyboard::Hyphen:
 			zoomFactor_ /= 1.5;
 			bitmap_.setScale(zoomFactor_, zoomFactor_);
+			cout << "Zoom set to " << zoomFactor_ << endl;
 			break;
 
 		case sf::Keyboard::Right:
 			offsetX_ -= 0.1f * window_.getSize().x;
 			bitmap_.setPosition(offsetX_, offsetY_);
+			cout << "Offsets set to (" << offsetX_ << ", " << offsetY_ << ")" << endl;
 			break;
 
 		case sf::Keyboard::Left:
 			offsetX_ += 0.1f * window_.getSize().x;
 			bitmap_.setPosition(offsetX_, offsetY_);
+			cout << "Offsets set to (" << offsetX_ << ", " << offsetY_ << ")" << endl;
 			break;
 
 		case sf::Keyboard::Up:
 			offsetY_ += 0.1f * window_.getSize().y;
 			bitmap_.setPosition(offsetX_, offsetY_);
+			cout << "Offsets set to (" << offsetX_ << ", " << offsetY_ << ")" << endl;
 			break;
 
 		case sf::Keyboard::Down:
 			offsetY_ -= 0.1f * window_.getSize().y;
 			bitmap_.setPosition(offsetX_, offsetY_);
+			cout << "Offsets set to (" << offsetX_ << ", " << offsetY_ << ")" << endl;
 			break;
 
 		case sf::Keyboard::Space:
@@ -202,6 +218,97 @@ void BitmapsApp::handleEvent(sf::Event& event)
 				}
 			}
 			break;
+
+		// Center
+		case sf::Keyboard::C:
+		{
+			// Center
+			int minX, minY, maxX, maxY;
+			pAutomaton->activeArea(minX, maxX, minY, maxY);
+
+			int offsetX, offsetY;
+			double scale = zoomFactor_;
+
+			if (maxX < minX || maxY < minY)
+			{
+				offsetX = 0;
+				offsetY = 0;
+			}
+			else
+			{
+				if (scale < 1.0)
+				{
+					offsetX = minX / 2;
+					offsetY = minY / 2;
+				}
+				else
+				{
+					offsetX = (1.0 - 0.5 / scale) * scale * minX;
+					offsetY = (1.0 - 0.5 / scale) * scale * minY;
+				}
+			}
+
+			// Cellular automation 0,0 is mapped to bitmap 0,0
+			// Then the bitmap is rendered according to its scale and offset
+			// Therefore we need to calculate the bitmap rendering
+			bitmap_.setPosition(-offsetX, -offsetY);
+
+			offsetX_ = -offsetX;
+			offsetY_ = -offsetY;
+
+			cout << "Offsets set to (" << offsetX_ << ", " << offsetY_ << ")" << endl;
+		}
+		break;
+
+		// Fit
+		case sf::Keyboard::F:
+		{
+			// Center
+			int minX, minY, maxX, maxY;
+			pAutomaton->activeArea(minX, maxX, minY, maxY);
+
+			int offsetX, offsetY;
+			double scaleX, scaleY, scale;
+
+			if (maxX < minX || maxY < minY)
+			{
+				offsetX = 0;
+				offsetY = 0;
+				scaleX = scaleY = scale = 1.0;
+			}
+			else
+			{
+				scaleX = ((double)bitmap_.xDim()) / ((double)(maxX + 1 - minX)) / 2;
+				scaleY = ((double)bitmap_.yDim()) / ((double)(maxY + 1 - minY)) / 2;
+				scale = std::min(scaleX, scaleY);
+
+				if (scale < 1.0)
+				{
+					offsetX = minX / 2;
+					offsetY = minY / 2;
+				}
+				else
+				{
+					offsetX = (1.0 - 0.5 / scale) * scale * minX;
+					offsetY = (1.0 - 0.5 / scale) * scale * minY;
+				}
+			}
+
+			// Cellular automation 0,0 is mapped to bitmap 0,0
+			// Then the bitmap is rendered according to its scale and offset
+			// Therefore we need to calculate the bitmap rendering
+			bitmap_.setScale(scale, scale);
+			bitmap_.setPosition(-offsetX, -offsetY);
+
+			zoomFactor_ = scale;
+			offsetX_ = -offsetX;
+			offsetY_ = -offsetY;
+
+			cout << "Zoom set to " << zoomFactor_ << endl;
+
+			cout << "Offsets set to (" << offsetX_ << ", " << offsetY_ << ")" << endl;
+		}
+		break;
 
 		}
 		break;
@@ -254,6 +361,12 @@ void BitmapsApp::displayCommands()
 	std::cout << "        '<-' - Move left" << std::endl;
 	std::cout << "    Up arrow - Move up" << std::endl;
 	std::cout << "  Down arrow - Move down" << std::endl;
+	std::cout << "         'S' - Save picture" << std::endl;
+	std::cout << "         'C' - Center active area" << std::endl;
+	std::cout << "       Space - One step" << std::endl;
+	std::cout << "         'G' - One step" << std::endl;
+	std::cout << "         'A' - Run steps automatically" << std::endl;
+	std::cout << "        '<-' - Move left" << std::endl;
 	std::cout << std::endl;
 }
 

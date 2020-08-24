@@ -22,8 +22,9 @@ CellularAutomaton::CellularAutomaton(int xDim, int yDim, const NeighborHood& nbh
 
 void CellularAutomaton::update()
 {
-	int hotspotX = nbh_.xDim() / 2;
-	int hotspotY = nbh_.yDim() / 2;
+	int hotspotX, hotspotY;
+	nbh_.getHotPoint(hotspotX, hotspotY);
+
 	int minActiveX = INT_MAX;
 	int minActiveY = INT_MAX;
 	int maxActiveX = -1;
@@ -118,6 +119,8 @@ void CellularAutomaton::update()
 	minActiveY_ = minActiveY;
 	maxActiveX_ = maxActiveX;
 	maxActiveY_ = maxActiveY;
+
+	nbh_.stepHotPoint();
 }
 
 CellularAutomaton::~CellularAutomaton()
@@ -185,5 +188,30 @@ void CellularAutomaton::clear()
 		{
 			rows_[r][c] = false;
 		}
+	}
+}
+
+void CellularAutomaton::insert(int xPos, int yPos, const std::initializer_list<std::string>& newStates)
+{
+	int r = 0;
+	for (auto row : newStates)
+	{
+		int c = 0;
+		for (char f : row)
+		{
+			int newR = r + yPos;
+			int newC = c + xPos;
+			if (newR >= 0 && newR < yDim_ && newC >= 0 && newC < xDim_)
+				if (rows_[newR][newC] = (f - '0'))  // Assignment is intentional
+				{
+					minActiveX_ = std::min(minActiveX_, newC);
+					maxActiveX_ = std::max(maxActiveX_, newC);
+					minActiveY_ = std::min(minActiveY_, newR);
+					maxActiveY_ = std::max(maxActiveY_, newR);
+				}
+
+			c++;
+		}
+		r++;
 	}
 }

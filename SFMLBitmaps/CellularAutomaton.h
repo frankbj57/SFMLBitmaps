@@ -26,8 +26,16 @@ public:
 
 	void print() const;
 
-	void setWrapAround(bool wrap) { wrapAround_ = wrap; }
+	void wrapAround(bool wrap) { wrapAround_ = wrap; }
 	bool wrapAround() const { return wrapAround_;  }
+
+	void activeArea(int& minX, int& maxX, int& minY, int& maxY)
+	{
+		minX = minActiveX_;
+		maxX = maxActiveX_;
+		minY = minActiveY_;
+		maxY = maxActiveY_;
+	}
 
 private:
 	NeighborHood nbh_;
