@@ -80,7 +80,7 @@ void BitmapsApp::init()
 
 
 	// Hotspot alternating between (3,2) og (3,3)
-	VerticallyAlternatingNeighborHood mayan = {
+	HorizontallyAlternatingNeighborHood mayan = {
 		{ 0, 1, 1, 1, 1, 0},
 		{ 1, 1, 0, 0, 1, 1},
 		{ 1, 0, 1, 1, 0, 1},
@@ -278,8 +278,10 @@ void BitmapsApp::handleEvent(sf::Event& event)
 			}
 			else
 			{
-				scaleX = ((double)bitmap_.xDim()) / ((double)(maxX + 1 - minX)) / 2;
-				scaleY = ((double)bitmap_.yDim()) / ((double)(maxY + 1 - minY)) / 2;
+				// Scale to window
+				sf::Vector2u ws = window_.getSize();
+				scaleX = (ws.x) / ((double)(maxX + 1 - minX))/2;
+				scaleY = (ws.y) / ((double)(maxY + 1 - minY))/2;
 				scale = std::min(scaleX, scaleY);
 
 				if (scale < 1.0)
