@@ -40,7 +40,7 @@ private:
 	int xDim_, yDim_;
 };
 
-class VerticallyAlternatingNeighborHood : public NeighborHood
+class HorizontallyAlternatingNeighborHood : public NeighborHood
 {
 public:
 	// Inherit the constructors

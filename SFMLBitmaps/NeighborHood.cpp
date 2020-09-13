@@ -35,7 +35,7 @@ void NeighborHood::setHotPoint(int xHot, int yHot)
 }
 
 
-void VerticallyAlternatingNeighborHood::stepHotPoint()
+void HorizontallyAlternatingNeighborHood::stepHotPoint()
 {
 	xHot_ = xDim() / 2 + currentStep_;
 	currentStep_ = (1 - currentStep_);
