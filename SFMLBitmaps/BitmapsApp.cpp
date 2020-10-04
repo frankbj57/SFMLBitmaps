@@ -202,6 +202,7 @@ void BitmapsApp::handleEvent(sf::Event& event)
 		case sf::Keyboard::G:
 			pAutomaton->update();
 			render(*pAutomaton, bitmap_);
+			fadein = 0.0;
 			break;
 
 		case sf::Keyboard::A:
@@ -325,13 +326,38 @@ void BitmapsApp::handleFrame()
 {
 	window_.clear();
 
-	if (active)
+	if (active && fadein >= 1.00)
 	{
 		pAutomaton->update();
 		render(*pAutomaton, bitmap_);
+
+		fadein = 0.0;
 	}
 
+
+	// Method: draw, then fade
 	bitmap_.draw(window_);
+	if (fadein < 1.00)
+	{
+		// Use a rectangle to fade the whole area, hitting all pixels
+		sf::RectangleShape fullscreen_rect;
+		fullscreen_rect.setPosition(0.0f, 0.0f);
+		fullscreen_rect.setSize(sf::Vector2f(window_.getSize()));
+
+		// Setup the RenderState with a blend
+		//		sf::BlendMode fade(sf::BlendMode::One, sf::BlendMode::One, sf::BlendMode::ReverseSubtract);
+
+		//
+		sf::BlendMode fade(sf::BlendMode::One, sf::BlendMode::One, sf::BlendMode::Add);
+		// Since the pattern is black, add less and less white to fade black in
+		sf::Uint8 fadeAmount = (sf::Uint8)((1.0 - fadein) * 255);
+		fullscreen_rect.setFillColor(sf::Color(fadeAmount, fadeAmount, fadeAmount, 255));
+
+		sf::RenderStates renderBlur(fade);
+		window_.draw(fullscreen_rect, renderBlur);
+
+		fadein += 0.01;
+	}
 
 	window_.display();
 }

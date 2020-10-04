@@ -32,5 +32,7 @@ private:
 
 	CellularAutomaton *pAutomaton;
 	bool active = false;
+
+	double fadein = 1.00;
 };
 
