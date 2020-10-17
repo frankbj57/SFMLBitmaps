@@ -13,7 +13,7 @@ using namespace std;
 
 #include <commdlg.h>
 
-bool GetSaveFileName(string& fileName, const vector<string> &extensions);
+bool GetSaveFileName(string& fileName, const vector<string>& extensions);
 
 BitmapsApp::BitmapsApp()
 	: SFApp("SFML Bitmaps"), pAutomaton(nullptr)
@@ -22,7 +22,7 @@ BitmapsApp::BitmapsApp()
 
 void BitmapsApp::init()
 {
-	WCHAR parameter[1000];
+	// WCHAR parameter[1000];
 
 	// GetPrivateProfileSection(L"CellAuto", parameter, sizeof(parameter), L"CellAutoConfig.ini");
 
@@ -94,13 +94,13 @@ void BitmapsApp::init()
 
 	//// Insert mayan start pattern
 	pAutomaton->insert(400, 300,
-		{ 
-			string( "101010101"),
+		{
+			string("101010101"),
 			string{ "010101010" },
 			string{ "101010101" },
 			string{ "010101010" }
 		}
-		);
+	);
 
 	displayCommands();
 	// Continue on any key pressed
@@ -111,10 +111,12 @@ void BitmapsApp::init()
 
 	window_.setFramerateLimit(30);
 
-	bitmap_.create(800, 600);
-	render(*pAutomaton, bitmap_);
+	bitmap_[currentBitmap_].create(800, 600);
+	render(*pAutomaton, bitmap_[currentBitmap_]);
 
-	oldBitmap_.create(800, 600);
+	bitmap_[1-currentBitmap_].create(800, 600);
+
+	Fit();
 
 	window_.requestFocus();
 }
@@ -156,8 +158,6 @@ void BitmapsApp::handleEvent(sf::Event& event)
 			zoomFactor_ = 1;
 			offsetX_ = 0;
 			offsetY_ = 0;
-			bitmap_.setScale(zoomFactor_, zoomFactor_);
-			bitmap_.setPosition(offsetX_, offsetY_);
 			cout << "Zoom set to " << zoomFactor_ << endl;
 			cout << "Offsets set to (" << offsetX_ << ", " << offsetY_ << ")" << endl;
 			break;
@@ -165,156 +165,71 @@ void BitmapsApp::handleEvent(sf::Event& event)
 		case sf::Keyboard::Add:
 			zoomFactor_ *= 1.5;
 			cout << "Zoom set to " << zoomFactor_ << endl;
-			bitmap_.setScale(zoomFactor_, zoomFactor_);
 			break;
 
 		case sf::Keyboard::Subtract:
 		case sf::Keyboard::Hyphen:
 			zoomFactor_ /= 1.5;
-			bitmap_.setScale(zoomFactor_, zoomFactor_);
 			cout << "Zoom set to " << zoomFactor_ << endl;
 			break;
 
 		case sf::Keyboard::Right:
 			offsetX_ -= 0.1f * window_.getSize().x;
-			bitmap_.setPosition(offsetX_, offsetY_);
 			cout << "Offsets set to (" << offsetX_ << ", " << offsetY_ << ")" << endl;
 			break;
 
 		case sf::Keyboard::Left:
 			offsetX_ += 0.1f * window_.getSize().x;
-			bitmap_.setPosition(offsetX_, offsetY_);
 			cout << "Offsets set to (" << offsetX_ << ", " << offsetY_ << ")" << endl;
 			break;
 
 		case sf::Keyboard::Up:
 			offsetY_ += 0.1f * window_.getSize().y;
-			bitmap_.setPosition(offsetX_, offsetY_);
 			cout << "Offsets set to (" << offsetX_ << ", " << offsetY_ << ")" << endl;
 			break;
 
 		case sf::Keyboard::Down:
 			offsetY_ -= 0.1f * window_.getSize().y;
-			bitmap_.setPosition(offsetX_, offsetY_);
 			cout << "Offsets set to (" << offsetX_ << ", " << offsetY_ << ")" << endl;
 			break;
 
 		case sf::Keyboard::Space:
 		case sf::Keyboard::G:
-			{
-				std::swap(oldBitmap_, bitmap_);
-				pAutomaton->update();
-				render(*pAutomaton, bitmap_);
-				fadein_ = 0.0;
-				clock_.restart();
-			}
-			break;
+		{
+			currentBitmap_ = 1 - currentBitmap_;
+			pAutomaton->update();
+			render(*pAutomaton, bitmap_[currentBitmap_]);
+			fadein_ = 0.0;
+			clock_.restart();
+		}
+		break;
 
 		case sf::Keyboard::A:
 			active_ = !active_;
 			break;
 
 		case sf::Keyboard::S:
+		{
+			string fileName;
+			if (GetSaveFileName(fileName, { "PNG", "*.png", "Bitmap", "*.bmp", "Targa", "*.tga" }))
 			{
-				string fileName;
-				if (GetSaveFileName(fileName, { "PNG", "*.png", "Bitmap", "*.bmp", "Targa", "*.tga"} ))
-				{
-					cout << "Saving to file: " << fileName << endl;
-					cout << "Saving " << (bitmap_.saveToFile(fileName) ? "succeeded" : "did not succeed") << endl;
-				}
+				cout << "Saving to file: " << fileName << endl;
+				cout << "Saving " << (bitmap_[currentBitmap_].saveToFile(fileName) ? "succeeded" : "did not succeed") << endl;
 			}
-			break;
+		}
+		break;
 
 		// Center
 		case sf::Keyboard::C:
 		{
-			// Center
-			int minX, minY, maxX, maxY;
-			pAutomaton->activeArea(minX, maxX, minY, maxY);
-
-			int offsetX, offsetY;
-			double scale = zoomFactor_;
-
-			if (maxX < minX || maxY < minY)
-			{
-				offsetX = 0;
-				offsetY = 0;
-			}
-			else
-			{
-				if (scale < 1.0)
-				{
-					offsetX = minX / 2;
-					offsetY = minY / 2;
-				}
-				else
-				{
-					offsetX = (1.0 - 0.5 / scale) * scale * minX;
-					offsetY = (1.0 - 0.5 / scale) * scale * minY;
-				}
-			}
-
-			// Cellular automation 0,0 is mapped to bitmap 0,0
-			// Then the bitmap is rendered according to its scale and offset
-			// Therefore we need to calculate the bitmap rendering
-			bitmap_.setPosition(-offsetX, -offsetY);
-
-			offsetX_ = -offsetX;
-			offsetY_ = -offsetY;
-
-			cout << "Offsets set to (" << offsetX_ << ", " << offsetY_ << ")" << endl;
+			Center();
 		}
 		break;
 
 		// Fit
 		case sf::Keyboard::F:
 		{
-			// Center
-			int minX, minY, maxX, maxY;
-			pAutomaton->activeArea(minX, maxX, minY, maxY);
-
-			int offsetX, offsetY;
-			double scaleX, scaleY, scale;
-
-			if (maxX < minX || maxY < minY)
-			{
-				offsetX = 0;
-				offsetY = 0;
-				scaleX = scaleY = scale = 1.0;
-			}
-			else
-			{
-				// Scale to window
-				sf::Vector2u ws = window_.getSize();
-				scaleX = (ws.x) / ((double)(maxX + 1 - minX))/2;
-				scaleY = (ws.y) / ((double)(maxY + 1 - minY))/2;
-				scale = std::min(scaleX, scaleY);
-
-				if (scale < 1.0)
-				{
-					offsetX = minX / 2;
-					offsetY = minY / 2;
-				}
-				else
-				{
-					offsetX = (1.0 - 0.5 / scale) * scale * minX;
-					offsetY = (1.0 - 0.5 / scale) * scale * minY;
-				}
-			}
-
-			// Cellular automation 0,0 is mapped to bitmap 0,0
-			// Then the bitmap is rendered according to its scale and offset
-			// Therefore we need to calculate the bitmap rendering
-			bitmap_.setScale(scale, scale);
-			bitmap_.setPosition(-offsetX, -offsetY);
-
-			zoomFactor_ = scale;
-			offsetX_ = -offsetX;
-			offsetY_ = -offsetY;
-
-			cout << "Zoom set to " << zoomFactor_ << endl;
-
-			cout << "Offsets set to (" << offsetX_ << ", " << offsetY_ << ")" << endl;
+			Fit();
 		}
 		break;
 
@@ -331,11 +246,15 @@ void BitmapsApp::handleFrame()
 {
 	window_.clear();
 
+	sf::Transform transform;
+	transform.translate(offsetX_, offsetY_);
+	transform.scale(zoomFactor_, zoomFactor_);
+
 	if (active_ && fadein_ >= 1.00)
 	{
-		std::swap(oldBitmap_, bitmap_);
+		currentBitmap_ = 1 - currentBitmap_;
 		pAutomaton->update();
-		render(*pAutomaton, bitmap_);
+		render(*pAutomaton, bitmap_[currentBitmap_]);
 
 		fadein_ = 0.0;
 		clock_.restart();
@@ -343,16 +262,19 @@ void BitmapsApp::handleFrame()
 
 
 	if (fadein_ >= 1.00)
-		bitmap_.draw(window_);
+	{
+		sf::RenderStates renderState(transform);
+		bitmap_[currentBitmap_].draw(window_, renderState);
+	}
 	else
 	{
 		sf::Int32 elapsed = clock_.getElapsedTime().asMilliseconds();
 
-		if (elapsed > fadeTime_)
+		if (elapsed >= fadeTime_)
 			fadein_ = 1.00;
 		else
 		{
-			fadein_ = (double) elapsed / fadeTime_;
+			fadein_ = (double)elapsed / fadeTime_;
 		}
 
 		// Use a rectangle to fade the whole area, hitting all pixels
@@ -371,14 +293,15 @@ void BitmapsApp::handleFrame()
 		//                    Src (rectangle)     Dst (old)                Operation
 		sf::BlendMode fadeOut(sf::BlendMode::One, sf::BlendMode::SrcAlpha, sf::BlendMode::Add);
 		sf::RenderStates renderBlur(fadeOut);
-		
+		renderBlur.transform = transform;
+
 		// Show old, faded out
-		oldBitmap_.draw(window_);
+		bitmap_[1-currentBitmap_].draw(window_, renderBlur);
 		window_.draw(fullscreen_rect, renderBlur);
 		// Now show new, faded in
 
 		renderBlur.blendMode = sf::BlendMode(sf::BlendMode::OneMinusDstAlpha, sf::BlendMode::One, sf::BlendMode::Add);
-		bitmap_.draw(window_, renderBlur);
+		bitmap_[currentBitmap_].draw(window_, renderBlur);
 	}
 
 	window_.display();
@@ -393,15 +316,15 @@ void BitmapsApp::cleanup()
 
 void BitmapsApp::displayCommands()
 {
-    std::cout << "=========================================================" << std::endl;
-    std::cout << std::endl;
-    std::cout << "               Welcome to SFML Bitmaps demo" << std::endl;
-    std::cout << std::endl;
-    std::cout << "  Plays around with textures, images and bitmaps" << std::endl;
-    std::cout << std::endl;
-    std::cout << "=========================================================" << std::endl;
-    std::cout << std::endl;
-    std::cout << "View Controls:" << std::endl;
+	std::cout << "=========================================================" << std::endl;
+	std::cout << std::endl;
+	std::cout << "               Welcome to SFML Bitmaps demo" << std::endl;
+	std::cout << std::endl;
+	std::cout << "  Plays around with textures, images and bitmaps" << std::endl;
+	std::cout << std::endl;
+	std::cout << "=========================================================" << std::endl;
+	std::cout << std::endl;
+	std::cout << "View Controls:" << std::endl;
 	std::cout << "         'H' - Show this list" << std::endl;
 	std::cout << "         Esc - Quit Program" << std::endl;
 	std::cout << "         'R' - Reset coordinates" << std::endl;
@@ -420,16 +343,82 @@ void BitmapsApp::displayCommands()
 	std::cout << std::endl;
 }
 
-void BitmapsApp::render(const CellularAutomaton&ca, Bitmap& bitmap)
+void BitmapsApp::render(const CellularAutomaton& ca, Bitmap& bitmap)
 {
 	bitmap.clear(sf::Color::White);
 
-	for (int y = 0; y < std::min(ca.yDim(), bitmap_.yDim()); y++)
-		for (int x = 0; x < std::min(ca.xDim(), bitmap_.xDim()); x++)
+	for (int y = 0; y < std::min(ca.yDim(), bitmap.yDim()); y++)
+		for (int x = 0; x < std::min(ca.xDim(), bitmap.xDim()); x++)
 		{
 			if (ca[y][x])
-				bitmap_.setPixel(x, y, sf::Color::Black);
+				bitmap.setPixel(x, y, sf::Color::Black);
 		}
+}
+
+void BitmapsApp::Center()
+{
+	// Center
+	int minX, minY, maxX, maxY;
+	pAutomaton->activeArea(minX, maxX, minY, maxY);
+
+	int offsetX, offsetY;
+	double scale = zoomFactor_;
+
+	if (maxX < minX || maxY < minY)
+	{
+		offsetX = 0;
+		offsetY = 0;
+	}
+	else
+	{
+		if (scale < 1.0)
+		{
+			offsetX = minX / 2;
+			offsetY = minY / 2;
+		}
+		else
+		{
+			offsetX = (1.0 - 0.5 / scale) * scale * minX;
+			offsetY = (1.0 - 0.5 / scale) * scale * minY;
+		}
+	}
+
+	// Cellular automation 0,0 is mapped to bitmap 0,0
+	// Then the bitmap is rendered according to its scale and offset
+	// Therefore we need to calculate the bitmap rendering
+	offsetX_ = -offsetX;
+	offsetY_ = -offsetY;
+
+	cout << "Offsets set to (" << offsetX_ << ", " << offsetY_ << ")" << endl;
+}
+
+void BitmapsApp::Fit()
+{
+	int minX, minY, maxX, maxY;
+	pAutomaton->activeArea(minX, maxX, minY, maxY);
+
+	double scaleX, scaleY, scale;
+
+	if (maxX < minX || maxY < minY)
+	{
+		scaleX = scaleY = scale = 1.0;
+	}
+	else
+	{
+		// Scale to window
+		sf::Vector2u ws = window_.getSize();
+		scaleX = (ws.x) / ((double)(maxX + 1 - minX)) / 2;
+		scaleY = (ws.y) / ((double)(maxY + 1 - minY)) / 2;
+		scale = std::min(scaleX, scaleY);
+	}
+
+	// Cellular automation 0,0 is mapped to bitmap 0,0
+	// Then the bitmap is rendered according to its scale and offset
+	// Therefore we need to calculate the bitmap rendering
+	zoomFactor_ = scale;
+	cout << "Zoom set to " << zoomFactor_ << endl;
+
+	Center();
 }
 
 bool GetSaveFileName(string& fileName, const vector<string>& extensions)

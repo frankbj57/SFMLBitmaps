@@ -24,8 +24,11 @@ private:
 	void displayCommands();
 	void render(const CellularAutomaton &ca, Bitmap& bitmap);
 
-	Bitmap bitmap_;
-	Bitmap oldBitmap_;
+	void Center();
+	void Fit();
+
+	Bitmap bitmap_[2];
+	unsigned int currentBitmap_ = 0;
 
 	float zoomFactor_ = 1.0;
 	float offsetX_ = 0.0;
