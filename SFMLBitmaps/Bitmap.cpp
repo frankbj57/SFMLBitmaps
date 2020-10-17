@@ -26,13 +26,16 @@ void Bitmap::clear(sf::Color background)
 
 void Bitmap::draw(sf::RenderWindow& window)
 {
-	if (needsUpdate_)
-	{
-		texture_.update(image_);
-		needsUpdate_ = false;
-	}
+	CheckAndUpdate();
 
 	window.draw(sprite_);
+}
+
+void Bitmap::draw(sf::RenderWindow& window, sf::RenderStates renderStates)
+{
+	CheckAndUpdate();
+
+	window.draw(sprite_, renderStates);
 }
 
 void Bitmap::setScale(float xScale, float yScale)
@@ -48,4 +51,13 @@ void Bitmap::setPosition(float xPos, float yPos)
 bool Bitmap::saveToFile(const std::string& fileName)
 {
 	return image_.saveToFile(fileName);
+}
+
+void Bitmap::CheckAndUpdate()
+{
+	if (needsUpdate_)
+	{
+		texture_.update(image_);
+		needsUpdate_ = false;
+	}
 }

@@ -13,6 +13,7 @@ public:
 
 
 	void draw(sf::RenderWindow& window);
+	void draw(sf::RenderWindow& window, sf::RenderStates renderStates);
 
 	void setScale(float xScale, float yScale);
 	void setPosition(float xPos, float yPos);
@@ -23,6 +24,8 @@ public:
 	bool saveToFile(const std::string& fileName);
 
 private:
+	void CheckAndUpdate();
+
 	bool needsUpdate_ = true;
 	sf::Texture texture_;
 	sf::Image image_;

@@ -112,8 +112,9 @@ void BitmapsApp::init()
 	window_.setFramerateLimit(30);
 
 	bitmap_.create(800, 600);
-
 	render(*pAutomaton, bitmap_);
+
+	oldBitmap_.create(800, 600);
 
 	window_.requestFocus();
 }
@@ -200,13 +201,17 @@ void BitmapsApp::handleEvent(sf::Event& event)
 
 		case sf::Keyboard::Space:
 		case sf::Keyboard::G:
-			pAutomaton->update();
-			render(*pAutomaton, bitmap_);
-			fadein = 0.0;
+			{
+				std::swap(oldBitmap_, bitmap_);
+				pAutomaton->update();
+				render(*pAutomaton, bitmap_);
+				fadein_ = 0.0;
+				clock_.restart();
+			}
 			break;
 
 		case sf::Keyboard::A:
-			active = !active;
+			active_ = !active_;
 			break;
 
 		case sf::Keyboard::S:
@@ -326,19 +331,30 @@ void BitmapsApp::handleFrame()
 {
 	window_.clear();
 
-	if (active && fadein >= 1.00)
+	if (active_ && fadein_ >= 1.00)
 	{
+		std::swap(oldBitmap_, bitmap_);
 		pAutomaton->update();
 		render(*pAutomaton, bitmap_);
 
-		fadein = 0.0;
+		fadein_ = 0.0;
+		clock_.restart();
 	}
 
 
-	// Method: draw, then fade
-	bitmap_.draw(window_);
-	if (fadein < 1.00)
+	if (fadein_ >= 1.00)
+		bitmap_.draw(window_);
+	else
 	{
+		sf::Int32 elapsed = clock_.getElapsedTime().asMilliseconds();
+
+		if (elapsed > fadeTime_)
+			fadein_ = 1.00;
+		else
+		{
+			fadein_ = (double) elapsed / fadeTime_;
+		}
+
 		// Use a rectangle to fade the whole area, hitting all pixels
 		sf::RectangleShape fullscreen_rect;
 		fullscreen_rect.setPosition(0.0f, 0.0f);
@@ -348,15 +364,21 @@ void BitmapsApp::handleFrame()
 		//		sf::BlendMode fade(sf::BlendMode::One, sf::BlendMode::One, sf::BlendMode::ReverseSubtract);
 
 		//
-		sf::BlendMode fade(sf::BlendMode::One, sf::BlendMode::One, sf::BlendMode::Add);
-		// Since the pattern is black, add less and less white to fade black in
-		sf::Uint8 fadeAmount = (sf::Uint8)((1.0 - fadein) * 255);
-		fullscreen_rect.setFillColor(sf::Color(fadeAmount, fadeAmount, fadeAmount, 255));
+		sf::Uint8 fadeInAmount = (sf::Uint8)(fadein_ * 255);
+		sf::Uint8 fadeOutAmount = (sf::Uint8)((1.0 - fadein_) * 255);
+		fullscreen_rect.setFillColor(sf::Color(0, 0, 0, fadeOutAmount));
 
-		sf::RenderStates renderBlur(fade);
+		//                    Src (rectangle)     Dst (old)                Operation
+		sf::BlendMode fadeOut(sf::BlendMode::One, sf::BlendMode::SrcAlpha, sf::BlendMode::Add);
+		sf::RenderStates renderBlur(fadeOut);
+		
+		// Show old, faded out
+		oldBitmap_.draw(window_);
 		window_.draw(fullscreen_rect, renderBlur);
+		// Now show new, faded in
 
-		fadein += 0.01;
+		renderBlur.blendMode = sf::BlendMode(sf::BlendMode::OneMinusDstAlpha, sf::BlendMode::One, sf::BlendMode::Add);
+		bitmap_.draw(window_, renderBlur);
 	}
 
 	window_.display();

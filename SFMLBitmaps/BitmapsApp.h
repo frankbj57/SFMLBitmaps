@@ -25,14 +25,19 @@ private:
 	void render(const CellularAutomaton &ca, Bitmap& bitmap);
 
 	Bitmap bitmap_;
+	Bitmap oldBitmap_;
 
 	float zoomFactor_ = 1.0;
 	float offsetX_ = 0.0;
 	float offsetY_ = 0.0;
 
 	CellularAutomaton *pAutomaton;
-	bool active = false;
+	bool active_ = false;
 
-	double fadein = 1.00;
+	double fadein_ = 1.00;
+
+	sf::Clock clock_;
+
+	sf::Int32 fadeTime_ = 5000; // In milliseconds
 };
 
