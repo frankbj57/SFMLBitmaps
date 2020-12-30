@@ -283,24 +283,30 @@ void BitmapsApp::handleFrame()
 		fullscreen_rect.setSize(sf::Vector2f(window_.getSize()));
 
 		// Setup the RenderState with a blend
-		//		sf::BlendMode fade(sf::BlendMode::One, sf::BlendMode::One, sf::BlendMode::ReverseSubtract);
-
-		//
 		sf::Uint8 fadeInAmount = (sf::Uint8)(fadein_ * 255);
 		sf::Uint8 fadeOutAmount = (sf::Uint8)((1.0 - fadein_) * 255);
 		fullscreen_rect.setFillColor(sf::Color(0, 0, 0, fadeOutAmount));
 
 		//                    Src (rectangle)     Dst (old)                Operation
-		sf::BlendMode fadeOut(sf::BlendMode::One, sf::BlendMode::SrcAlpha, sf::BlendMode::Add);
+		sf::BlendMode fadeOut(
+			sf::BlendMode::One, sf::BlendMode::One, sf::BlendMode::Add, // For RGB
+			sf::BlendMode::SrcAlpha, sf::BlendMode::Zero, sf::BlendMode::Add); // For alpha
 		sf::RenderStates renderBlur(fadeOut);
 		renderBlur.transform = transform;
 
-		// Show old, faded out
-		bitmap_[1-currentBitmap_].draw(window_, renderBlur);
-		window_.draw(fullscreen_rect, renderBlur);
-		// Now show new, faded in
+		// Now it should be the previous bitmap colors but with fadeout factor as alpha
+		// So we keep this alpha as a possible factor when adding the new bitmap
 
-		renderBlur.blendMode = sf::BlendMode(sf::BlendMode::OneMinusDstAlpha, sf::BlendMode::One, sf::BlendMode::Add);
+		// Show old, faded out
+		bitmap_[1 - currentBitmap_].draw(window_, transform);
+		// bitmap_[1 - currentBitmap_].draw(window_, renderBlur);
+		window_.draw(fullscreen_rect, renderBlur);
+
+		// Now add the new with a weighting from the destination alpha
+		renderBlur.blendMode = sf::BlendMode(
+			sf::BlendMode::OneMinusDstAlpha, sf::BlendMode::DstAlpha, sf::BlendMode::Add, // Mix the colors
+			sf::BlendMode::One, sf::BlendMode::Zero, sf::BlendMode::Add); // Ending with an alpha of 1
+
 		bitmap_[currentBitmap_].draw(window_, renderBlur);
 	}
 

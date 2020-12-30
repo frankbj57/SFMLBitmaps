@@ -41,6 +41,6 @@ private:
 
 	sf::Clock clock_;
 
-	sf::Int32 fadeTime_ = 5000; // In milliseconds
+	sf::Int32 fadeTime_ = 2000; // In milliseconds
 };
 
