@@ -1,6 +1,7 @@
 #include "CellularAutomaton.h"
 #include <algorithm>
 #include <iostream>
+#include <climits>
 
 
 CellularAutomaton::CellularAutomaton(int xDim, int yDim, const NeighborHood& nbh, const NextStateFunction& nsf)
@@ -23,7 +24,7 @@ CellularAutomaton::CellularAutomaton(int xDim, int yDim, const NeighborHood& nbh
 void CellularAutomaton::update()
 {
 	int hotspotX, hotspotY;
-	nbh_.getHotPoint(hotspotX, hotspotY);
+	nbh_.getHotPoint(hotspotX, hotspotY);INT_MAX;
 
 	int minActiveX = INT_MAX;
 	int minActiveY = INT_MAX;

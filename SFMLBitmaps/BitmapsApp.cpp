@@ -6,13 +6,6 @@
 
 using namespace std;
 
-//The dreaded windows include file...
-#include <Windows.h>
-#undef min
-#undef max
-
-#include <commdlg.h>
-
 bool GetSaveFileName(string& fileName, const vector<string>& extensions);
 
 BitmapsApp::BitmapsApp()
@@ -211,11 +204,15 @@ void BitmapsApp::handleEvent(sf::Event& event)
 		case sf::Keyboard::S:
 		{
 			string fileName;
+			#ifdef _WIN32
 			if (GetSaveFileName(fileName, { "PNG", "*.png", "Bitmap", "*.bmp", "Targa", "*.tga" }))
 			{
 				cout << "Saving to file: " << fileName << endl;
 				cout << "Saving " << (bitmap_[currentBitmap_].saveToFile(fileName) ? "succeeded" : "did not succeed") << endl;
 			}
+			#else
+				cout << "Saving to file not implemented!" << endl;
+			#endif
 		}
 		break;
 
@@ -363,7 +360,7 @@ void BitmapsApp::render(const CellularAutomaton& ca, Bitmap& bitmap)
 
 void BitmapsApp::Center()
 {
-	// Center
+	// Center			if (GetSaveFileName(fileName, { "PNG", "*.png", "Bitmap", "*.bmp", "Targa", "*.tga" }))
 	int minX, minY, maxX, maxY;
 	pAutomaton->activeArea(minX, maxX, minY, maxY);
 
@@ -427,12 +424,16 @@ void BitmapsApp::Fit()
 	Center();
 }
 
-bool GetSaveFileName(string& fileName, const vector<string>& extensions)
-{
-	OPENFILENAMEA opf;
-	char strResult[500];
+#ifdef _WIN32
 
-	vector<char> extensionlist;
+//The dreaded windows include file...
+#include <Windows.h>
+#undef min
+#undef max
+
+#include <commdlg.h>
+
+			if (GetSaveFileName(fileName, { "PNG", "*.png", "Bitmap", "*.bmp", "Targa", "*.tga" }))
 
 	for (auto extension : extensions)
 	{
@@ -475,7 +476,7 @@ bool GetSaveFileName(string& fileName, const vector<string>& extensions)
 				{
 					while (i < ext.size())
 					{
-						fileName.push_back(ext[i]);
+						fileName.push_back(ex#include <commdlg.h>t[i]);
 						i++;
 					}
 				}
@@ -486,3 +487,5 @@ bool GetSaveFileName(string& fileName, const vector<string>& extensions)
 
 	return false;
 }
+
+#endif

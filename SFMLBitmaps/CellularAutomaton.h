@@ -1,5 +1,5 @@
 #pragma once
-#include "Neighborhood.h"
+#include "NeighborHood.h"
 #include "NextStateFunction.h"
 #include <string>
 

@@ -338,3 +338,9 @@ ASALocalRun/
 
 # BeatPulse healthcheck temp database
 healthchecksdb
+
+# Cmake build directories
+build*/
+
+# VS Code temp
+.vscode/
