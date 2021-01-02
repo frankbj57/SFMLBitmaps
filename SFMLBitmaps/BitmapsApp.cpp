@@ -4,6 +4,17 @@
 #include <algorithm>
 #include <vector>
 
+#ifdef _WIN32
+
+//The dreaded windows include file...
+#include <Windows.h>
+#undef min
+#undef max
+
+#include <commdlg.h>
+
+#endif
+
 using namespace std;
 
 bool GetSaveFileName(string& fileName, const vector<string>& extensions);
@@ -360,7 +371,7 @@ void BitmapsApp::render(const CellularAutomaton& ca, Bitmap& bitmap)
 
 void BitmapsApp::Center()
 {
-	// Center			if (GetSaveFileName(fileName, { "PNG", "*.png", "Bitmap", "*.bmp", "Targa", "*.tga" }))
+	// Center
 	int minX, minY, maxX, maxY;
 	pAutomaton->activeArea(minX, maxX, minY, maxY);
 
@@ -426,14 +437,12 @@ void BitmapsApp::Fit()
 
 #ifdef _WIN32
 
-//The dreaded windows include file...
-#include <Windows.h>
-#undef min
-#undef max
+bool GetSaveFileName(string& fileName, const vector<string>& extensions)
+{
+	OPENFILENAMEA opf;
+	char strResult[500];
 
-#include <commdlg.h>
-
-			if (GetSaveFileName(fileName, { "PNG", "*.png", "Bitmap", "*.bmp", "Targa", "*.tga" }))
+	vector<char> extensionlist;
 
 	for (auto extension : extensions)
 	{
@@ -476,7 +485,7 @@ void BitmapsApp::Fit()
 				{
 					while (i < ext.size())
 					{
-						fileName.push_back(ex#include <commdlg.h>t[i]);
+						fileName.push_back(ext[i]);
 						i++;
 					}
 				}
