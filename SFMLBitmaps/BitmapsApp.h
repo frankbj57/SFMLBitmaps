@@ -11,8 +11,6 @@ public:
 
 	virtual void init();
 
-	virtual void run();
-
 	virtual void cleanup();
 
 protected:
@@ -36,6 +34,9 @@ private:
 
 	CellularAutomaton *pAutomaton;
 	bool active_ = false;
+
+	bool continous_fit = false;
+	bool continous_center = false;
 
 	double fadein_ = 1.00;
 

@@ -125,20 +125,6 @@ void BitmapsApp::init()
 	window_.requestFocus();
 }
 
-void BitmapsApp::run()
-{
-	while (window_.isOpen())
-	{
-		sf::Event event;
-		while (window_.pollEvent(event))
-		{
-			handleEvent(event);
-		}
-
-		handleFrame();
-	}
-}
-
 void BitmapsApp::handleEvent(sf::Event& event)
 {
 	switch (event.type)
@@ -230,14 +216,26 @@ void BitmapsApp::handleEvent(sf::Event& event)
 		// Center
 		case sf::Keyboard::C:
 		{
-			Center();
+			if (event.key.shift)
+			{
+				if (continous_center = !continous_center)  // Assignment is intentional
+					Center();
+			}
+			else
+				Center();
 		}
 		break;
 
 		// Fit
 		case sf::Keyboard::F:
 		{
-			Fit();
+			if (event.key.shift)
+			{
+				if (continous_fit = !continous_fit)  // Assignment is intentional
+					Fit();
+			}
+			else
+				Fit();
 		}
 		break;
 
@@ -319,6 +317,15 @@ void BitmapsApp::handleFrame()
 	}
 
 	window_.display();
+
+	if (fadein_ >= 1.0 && continous_fit)
+	{
+		Fit();
+	}
+	else if (fadein_ >= 1.0 && continous_center)
+	{
+		Center();
+	}
 }
 
 
