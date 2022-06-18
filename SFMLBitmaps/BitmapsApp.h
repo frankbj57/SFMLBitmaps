@@ -1,10 +1,10 @@
 #pragma once
-#include "SFApp.h"
+#include "SFMLApp.hpp"
 #include "Bitmap.h"
 #include "CellularAutomaton.h"
 
 class BitmapsApp :
-	public SFApp
+	public SFMLApp
 {
 public:
 	BitmapsApp();
@@ -16,7 +16,7 @@ public:
 protected:
 	void handleEvent(sf::Event& event);
 
-	void handleFrame();
+	void handleFrame(double elapsedSeconds) override;
 
 private:
 	void displayCommands();
@@ -28,7 +28,7 @@ private:
 	Bitmap bitmap_[2];
 	unsigned int currentBitmap_ = 0;
 
-	float zoomFactor_ = 1.0;
+	double zoomFactor_ = 1.0;
 	float offsetX_ = 0.0;
 	float offsetY_ = 0.0;
 
@@ -40,8 +40,7 @@ private:
 
 	double fadein_ = 1.00;
 
-	sf::Clock clock_;
-
-	sf::Int32 fadeTime_ = 2000; // In milliseconds
+	double fadeTime_ = 2.0; // In seconds
+	double elapsedTime_ = 0.0; // In seconds
 };
 

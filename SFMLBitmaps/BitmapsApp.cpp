@@ -20,7 +20,7 @@ using namespace std;
 bool GetSaveFileName(string& fileName, const vector<string>& extensions);
 
 BitmapsApp::BitmapsApp()
-	: SFApp("SFML Bitmaps"), pAutomaton(nullptr)
+	: SFMLApp("SFML Bitmaps"), pAutomaton(nullptr)
 {
 }
 
@@ -118,7 +118,7 @@ void BitmapsApp::init()
 	bitmap_[currentBitmap_].create(800, 600);
 	render(*pAutomaton, bitmap_[currentBitmap_]);
 
-	bitmap_[1-currentBitmap_].create(800, 600);
+	bitmap_[1 - currentBitmap_].create(800, 600);
 
 	Fit();
 
@@ -190,7 +190,7 @@ void BitmapsApp::handleEvent(sf::Event& event)
 			pAutomaton->update();
 			render(*pAutomaton, bitmap_[currentBitmap_]);
 			fadein_ = 0.0;
-			clock_.restart();
+			elapsedTime_ = 0.0;
 		}
 		break;
 
@@ -201,15 +201,15 @@ void BitmapsApp::handleEvent(sf::Event& event)
 		case sf::Keyboard::S:
 		{
 			string fileName;
-			#ifdef _WIN32
+#ifdef _WIN32
 			if (GetSaveFileName(fileName, { "PNG", "*.png", "Bitmap", "*.bmp", "Targa", "*.tga" }))
 			{
 				cout << "Saving to file: " << fileName << endl;
 				cout << "Saving " << (bitmap_[currentBitmap_].saveToFile(fileName) ? "succeeded" : "did not succeed") << endl;
 			}
-			#else
-				cout << "Saving to file not implemented!" << endl;
-			#endif
+#else
+			cout << "Saving to file not implemented!" << endl;
+#endif
 		}
 		break;
 
@@ -243,13 +243,15 @@ void BitmapsApp::handleEvent(sf::Event& event)
 		break;
 
 	default:
-		SFApp::handleEvent(event);
+		SFMLApp::handleEvent(event);
 		break;
 	}
 }
 
-void BitmapsApp::handleFrame()
+void BitmapsApp::handleFrame(double elapsedSeconds)
 {
+	elapsedTime_ += elapsedSeconds;
+
 	window_.clear();
 
 	sf::Transform transform;
@@ -263,7 +265,7 @@ void BitmapsApp::handleFrame()
 		render(*pAutomaton, bitmap_[currentBitmap_]);
 
 		fadein_ = 0.0;
-		clock_.restart();
+		elapsedTime_ = 0.0;
 	}
 
 
@@ -274,13 +276,11 @@ void BitmapsApp::handleFrame()
 	}
 	else
 	{
-		sf::Int32 elapsed = clock_.getElapsedTime().asMilliseconds();
-
-		if (elapsed >= fadeTime_)
+		if (elapsedTime_ >= fadeTime_)
 			fadein_ = 1.00;
 		else
 		{
-			fadein_ = (double)elapsed / fadeTime_;
+			fadein_ = elapsedTime_ / fadeTime_;
 		}
 
 		// Use a rectangle to fade the whole area, hitting all pixels
@@ -291,6 +291,7 @@ void BitmapsApp::handleFrame()
 		// Setup the RenderState with a blend
 		sf::Uint8 fadeInAmount = (sf::Uint8)(fadein_ * 255);
 		sf::Uint8 fadeOutAmount = (sf::Uint8)((1.0 - fadein_) * 255);
+		cout << "Fadeout: " << (int) fadeOutAmount << " Fadein: " << (int) fadeInAmount << endl;
 		fullscreen_rect.setFillColor(sf::Color(0, 0, 0, fadeOutAmount));
 
 		//                    Src (rectangle)     Dst (old)                Operation
@@ -356,7 +357,8 @@ void BitmapsApp::displayCommands()
 	std::cout << "    Up arrow - Move up" << std::endl;
 	std::cout << "  Down arrow - Move down" << std::endl;
 	std::cout << "         'S' - Save picture" << std::endl;
-	std::cout << "         'C' - Center active area" << std::endl;
+	std::cout << "         'C' - Center active area (Shift+ for continuous)" << std::endl;
+	std::cout << "         'F' - Fit active area (Shift+ for continuous)" << std::endl;
 	std::cout << "       Space - One step" << std::endl;
 	std::cout << "         'G' - One step" << std::endl;
 	std::cout << "         'A' - Run steps automatically" << std::endl;
@@ -407,10 +409,13 @@ void BitmapsApp::Center()
 	// Cellular automation 0,0 is mapped to bitmap 0,0
 	// Then the bitmap is rendered according to its scale and offset
 	// Therefore we need to calculate the bitmap rendering
-	offsetX_ = -offsetX;
-	offsetY_ = -offsetY;
+	if (offsetX_ != -offsetX || offsetY_ != -offsetY)
+	{
+		offsetX_ = -offsetX;
+		offsetY_ = -offsetY;
 
-	cout << "Offsets set to (" << offsetX_ << ", " << offsetY_ << ")" << endl;
+		cout << "Offsets set to (" << offsetX_ << ", " << offsetY_ << ")" << endl;
+	}
 }
 
 void BitmapsApp::Fit()
@@ -436,10 +441,13 @@ void BitmapsApp::Fit()
 	// Cellular automation 0,0 is mapped to bitmap 0,0
 	// Then the bitmap is rendered according to its scale and offset
 	// Therefore we need to calculate the bitmap rendering
-	zoomFactor_ = scale;
-	cout << "Zoom set to " << zoomFactor_ << endl;
+	if (zoomFactor_ != scale)
+	{
+		zoomFactor_ = scale;
+		cout << "Zoom set to " << zoomFactor_ << endl;
 
-	Center();
+		Center();
+	}
 }
 
 #ifdef _WIN32
